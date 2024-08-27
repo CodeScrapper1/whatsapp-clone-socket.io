@@ -1,23 +1,38 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { lazy, Suspense } from "react";
+import { Route, Routes } from "react-router-dom";
+import { Toaster } from "sonner";
+import { SocketProvider } from "./utils/SocketProvider";
+import { useLocalStorage } from "@mantine/hooks";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
+const Login = lazy(() => import("./components/Login"));
+const Register = lazy(() => import("./components/Register"));
+const Home = lazy(() => import("./components/Home"));
+const UserDetails = lazy(() => import("./components/UserDetails"));
 function App() {
+  const [user] = useLocalStorage({
+    key: "userData",
+    defaultValue: {},
+  });
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Toaster />
+      <Suspense fallback={<div>Loading</div>}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route
+            element={
+              <SocketProvider>
+                <ProtectedRoute user={user} />
+              </SocketProvider>
+            }
+          >
+            <Route path="/" element={<Home />} />
+            <Route path="/:userId" element={<UserDetails />} />
+          </Route>
+        </Routes>
+      </Suspense>
     </div>
   );
 }
